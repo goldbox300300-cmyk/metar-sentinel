@@ -1,0 +1,33 @@
+name: METAR Sentinel
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ruleaza sentinelul
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python metar_sentinel.py
+
+      - name: Salveaza starea
+        run: |
+          git config user.name "sentinel"
+          git config user.email "sentinel@users.noreply.github.com"
+          git add state.json 2>/dev/null || true
+          git commit -m "state [skip ci]" || true
+          git push || true
